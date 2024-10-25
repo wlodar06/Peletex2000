@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelletx2000</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #FFFFF;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.5s ease;
+        }
+
+        h1 {
+            color: #2196F3;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 3em; /* Increased size */
+        }
+
+        #welcomeScreen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-color: #FFFFF;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeIn 1s forwards;
+            z-index: 10;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        #formContainer {
+            display: none;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            background-color: white;
+            margin: auto;
+            max-width: 800px;
+            transition: transform 0.5s ease;
+        }
+
+        canvas {
+            border: 1px solid #2196F3;
+            margin-top: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        fieldset {
+            border: 2px solid #2196F3;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        legend {
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+
+        #historie {
+            margin-top: 20px;
+            background-color: #e2e2e2;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        input[type="number"], input[type="date"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus, input[type="date"]:focus {
+            border-color: #2196F3;
+            outline: none;
+        }
+
+        #iloscDosypania {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            canvas {
+                width: 100%;
+                height: 200px;
+            }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #4CAF50;
+            font-size: 1.2em;
+        }
+
+        @keyframes ciekawaAnimacja {
+    0% {
+        opacity: 0;
+        transform: scale(0.1) rotate(0deg); /* Zaczyna bardzo mały */
+    }
+    20% {
+        opacity: 1;
+        transform: scale(2); /* Szybko zwiększa się do 200% */
+    }
+    100% {
+        opacity: 1;
+        transform: scale(2); /* Powrót do normalnego rozmiaru */
+    }
+}
+
+.animowany-tekst {
+    animation: ciekawaAnimacja 1.5s ease-out forwards; /* Animacja trwa 1.5 sekundy */
+}
+    </style>
+</head>
+<body>
+
+    <div id="welcomeScreen">
+        <h1 class="animowany-tekst">PelletX2000</h1>
+        <h2></h2>
+    </div>
+
+    <div id="formContainer">
+        <h1>PelletX2000</h1>
+        <div id="startPrompt">
+            <p>Chcesz załadować istniejący zapis czy utworzyć nowy? Wybierz jedną z opcji:</p>
+            <button type="button" onclick="zapiszDoPliku()" id="zapiszButton" >Zapisz</button>
+            <button onclick="odczytajZPliku()">Załaduj zapis</button>
+        </div>
+
+        <div id="formContent" style="display:none;">
+            <h2>Dodaj Dane</h2>
+            <form id="dosypForm">
+                <fieldset>
+                    <legend>Pellet na stanie:</legend>
+                    <label for="pelletNaStanie">Ilość pelletu (kg):</label>
+                    <input type="number" id="pelletNaStanie" value="0" min="0" step="0.01">
+                    <br><br>
+                    <label for="cenaZaT">Cena za tonę (zł):</label>
+                    <input type="number" id="cenaZaT" value="0" min="0" required><br>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Dosypanie pelletu:</legend>
+                    <label for="iloscWorek">Ilość worków:</label>
+                    <input type="number" id="iloscWorek" value="1" min="1" style="width: 50px;">
+                    <select id="iloscDosypania">
+                        <option value="15">15 kg</option>
+                        <option value="30">30 kg</option>
+                        <option value="custom">Własna wartość (kg)</option>
+                    </select>
+                    <input type="number" id="customValue" placeholder="Wpisz wartość" style="display:none; width: 100px;" min="1">
+                    <br><br>
+
+
+
+                    <label for="dataDosypania">Data dosypania:</label>
+                    <input type="date" id="dataDosypania" value="${new Date().toISOString().split('T')[0]}"><br>
+
+                    <button type="button" onclick="dodajPellet()">Dodaj</button>
+                  
+                </fieldset>
+
+                <fieldset>
+                    <legend>Okres rysowania wykresu:</legend>
+                    <label for="startDate">Data początkowa:</label>
+                    <input type="date" id="startDate">
+                    <label for="endDate">Data końcowa:</label>
+                    <input type="date" id="endDate">
+                    <button type="button" onclick="rysujWykres()">odśwież wykres</button>
+                </fieldset>
+            </form>
+
+            <h2>Wyniki</h2>
+            <p id="wyniki">Brak danych.</p>
+
+            <h2>Historia</h2>
+            <div id="historie">Brak zapisanych danych.</div>
+
+            <h2>Wykres Dosypania Pelletu</h2>
+            <canvas id="wykresPelletu" width="300" height="200"></canvas>
+
+            <h2>Analiza Miesięczna</h2>
+            <div id="wynikiAnalizyMiesiecznej"></div>
+
+            <h2>Analiza Roczna</h2>
+            <div id="wynikiAnalizyRocznej"></div>
+            <br>
+            <center><p>by Mikołaj Włodarczyk</p></center>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let pelletDostepny = 0;
+        let koszty = 0;
+        let dodanePellet = [];
+        let historia = [];
+        let cenaZaT = 0;
+        let plikJSON = '';
+        let chart = null; // Variable to store the chart instance
+
+   // Function to hide the welcome screen and show the main form
+function hideWelcomeScreen() {
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    const formContainer = document.getElementById('formContainer');
+    const formContent = document.getElementById('formContent');
+    
+    // Animacja wyjeżdżania ekranu w górę i zanikania
+    welcomeScreen.style.transition = 'transform 350ms ease, opacity 350ms ease';
+    welcomeScreen.style.opacity = 0;
+    welcomeScreen.style.transform = 'translateY(-100%)'; // Wyjeżdżanie w górę
+    
+    setTimeout(() => {
+        welcomeScreen.style.display = 'none';
+        
+        // Pokaż formularz z rozmyciem
+        formContainer.style.display = 'block';
+        formContent.style.display = 'block';
+        formContainer.style.filter = 'blur(10px)';
+        formContainer.style.transition = 'filter 350ms ease';
+
+        // Usuń rozmycie po krótkim czasie
+        setTimeout(() => {
+            formContainer.style.filter = 'blur(0)';
+        }, 6); // Dodanie krótkiego opóźnienia, aby rozmycie zadziałało od razu
+    }, 350); // Czas trwania animacji wyjeżdżania
+    document.getElementById('pelletNaStanie').value = pelletDostepny;
+    document.getElementById('historie').innerHTML = 'Brak zapisanych danych.';
+}
+
+
+        // Automatically hide welcome screen after 3 seconds
+        setTimeout(hideWelcomeScreen, 1000);
+
+        function odczytajZPliku() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (event) => {
+                const file = event.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const contents = e.target.result;
+                    const data = JSON.parse(contents);
+                    if (data) {
+                        pelletDostepny = data.pelletDostepny;
+                        koszty = data.koszty;
+                        dodanePellet = data.dodanePellet;
+                        historia = data.historia;
+                        cenaZaT = data.cenaZaT;
+                        document.getElementById('cenaZaT').value = cenaZaT;
+                        document.getElementById('pelletNaStanie').value = pelletDostepny;
+                        aktualizujHistorie();
+                            // Wywołanie analiz
+                        analizaMiesieczna();
+                        analizaRoczna();
+                        document.getElementById('zapiszButton').style.display = 'inline';
+                        alert('Dane zostały załadowane.');
+                    } else {
+                        alert('Nie udało się załadować danych.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+         
+        }
+
+        function zapiszDoPliku() {
+           
+            cenaZaT = parseFloat(document.getElementById('cenaZaT').value);
+            const data = {
+                pelletDostepny,
+                koszty,
+                dodanePellet,
+                historia,
+                cenaZaT
+            };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'zapis.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function dodajPellet() {
+            const iloscWorek = parseInt(document.getElementById('iloscWorek').value);
+            //jesli custom
+            if (document.getElementById('iloscDosypania').value === 'custom') {
+            
+                iloscDosypania = parseFloat(document.getElementById('customValue').value);
+               
+            } else if (document.getElementById('iloscDosypania').value !== '15') {
+           // 15kg
+                iloscDosypania = 30*(parseFloat(document.getElementById('iloscWorek').value));
+                
+            
+            } else if (document.getElementById('iloscDosypania').value !== '30') {
+            //30kg
+               iloscDosypania = 15*(parseFloat(document.getElementById('iloscWorek').value));
+               
+            }
+             // Zaokrąglenie do dwóch miejsc po przecinku
+             iloscDosypania = Number(iloscDosypania.toFixed(2));
+           
+
+            cenaZaT = parseFloat(document.getElementById('cenaZaT').value);
+            const dataDosypania = document.getElementById('dataDosypania').value;
+
+            if (iloscWorek <= 0 || isNaN(iloscDosypania) || isNaN(cenaZaT) || !dataDosypania) {
+                alert('Wprowadź prawidłowe dane.');
+                return;
+            }
+
+            pelletDostepny = parseFloat(document.getElementById('pelletNaStanie').value);
+
+            if (pelletDostepny - iloscDosypania < 0) {
+                alert('Zbyt mało pelletu na stanie');
+                return;
+            }
+
+            const koszt = Number((iloscDosypania * (cenaZaT/1000)).toFixed(2));
+            
+
+            pelletDostepny -= iloscDosypania; // Update available pellet amount
+            dodanePellet.push({ ilosc: iloscDosypania, koszt, data: dataDosypania });
+            historia.push({ ilosc: iloscDosypania, koszt, data: dataDosypania });
+
+            // Update UI
+            document.getElementById('pelletNaStanie').value = pelletDostepny;
+            document.getElementById('wyniki').innerText = `Dodano ${iloscDosypania} kg pelletu.`;
+            aktualizujHistorie();
+
+            // Wywołanie analiz
+            analizaMiesieczna();
+            analizaRoczna();
+        }
+
+        function aktualizujHistorie() {
+    const historieContainer = document.getElementById('historie');
+    historieContainer.innerHTML = ''; // Opróżnij kontener przed aktualizacją
+
+    historia.forEach((item, index) => {
+        const historiaElement = document.createElement('div');
+        historiaElement.innerHTML = `Data: ${item.data}, Ilość: ${item.ilosc} kg, Koszt: ${item.koszt} zł`;
+        historiaElement.dataset.index = index; // Przypisanie unikalnego indeksu
+        historiaElement.style.padding = '5px';
+        historiaElement.style.cursor = 'pointer';
+
+        // Zmiana koloru na czerwony po najechaniu
+        historiaElement.addEventListener('mouseover', function() {
+            historiaElement.style.backgroundColor = 'red';
+            historiaElement.style.color = 'white';
+        });
+
+        // Przywracanie koloru po opuszczeniu
+        historiaElement.addEventListener('mouseout', function() {
+            historiaElement.style.backgroundColor = '';
+            historiaElement.style.color = '';
+        });
+
+        // Usuwanie pozycji po kliknięciu
+        historiaElement.addEventListener('click', function() {
+            const confirmDelete = confirm(`Czy na pewno chcesz usunąć pozycję: Data: ${item.data}, Ilość: ${item.ilosc} kg, Koszt: ${item.koszt} zł?`);
+            if (confirmDelete) {
+                historia.splice(index, 1); // Usunięcie elementu z historii
+                aktualizujHistorie(); // Aktualizacja widoku
+                analizaMiesieczna(); // Aktualizacja analizy miesięcznej
+                analizaRoczna(); // Aktualizacja analizy rocznej
+            }
+        });
+
+        // Dodanie elementu do kontenera historii
+        historieContainer.appendChild(historiaElement);
+    });
+
+    if (historia.length === 0) {
+        historieContainer.innerHTML = 'Brak zapisanych danych.';
+    }
+}
+
+function rysujWykres() {
+    const startDate = new Date(document.getElementById('startDate').value);
+    const endDate = new Date(document.getElementById('endDate').value);
+
+    // Filtrujemy dane w wybranym okresie czasu i sortujemy je po dacie
+    const filteredData = historia
+        .filter(item => {
+            const itemDate = new Date(item.data);
+            return itemDate >= startDate && itemDate <= endDate;
+        })
+        .sort((a, b) => new Date(a.data) - new Date(b.data)); // Sortowanie danych po dacie
+
+    if (filteredData.length < 2) {
+        alert('Potrzebne są co najmniej dwa punkty danych do obliczenia zużycia.');
+        return;
+    }
+
+    const labels = [];
+    const zuzyciePelletu = [];
+
+    for (let i = 1; i < filteredData.length; i++) {
+        const poprzednieDosypanie = filteredData[i - 1];
+        const aktualneDosypanie = filteredData[i];
+
+        const dataPoprzednia = new Date(poprzednieDosypanie.data);
+        const dataAktualna = new Date(aktualneDosypanie.data);
+
+        // Obliczanie liczby dni między dosypaniami
+        const roznicaCzasu = dataAktualna - dataPoprzednia;
+        const dniMiedzyDosypaniami = roznicaCzasu / (1000 * 60 * 60 * 24);
+
+        if (dniMiedzyDosypaniami <= 0) {
+            continue; // Pomijamy błędne dane
+        }
+
+        // Obliczanie zużycia pelletu
+        const iloscZuzytegoPelletu = poprzednieDosypanie.ilosc;
+        const zuzycieNaDzien = iloscZuzytegoPelletu / dniMiedzyDosypaniami;
+
+        // Dodawanie pełnych dat na osi X
+        labels.push(poprzednieDosypanie.data + ' - ' + aktualneDosypanie.data);
+        zuzyciePelletu.push(Math.max(zuzycieNaDzien, 0).toFixed(2)); // Unikamy wartości ujemnych
+    }
+
+    // Rysowanie wykresu
+    const ctx = document.getElementById('wykresPelletu').getContext('2d');
+    if (chart) {
+        chart.destroy(); // Zniszcz poprzedni wykres, jeśli istnieje
+    }
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels, // Pełny zakres dat
+            datasets: [{
+                label: 'Zużycie pelletu (kg/dzień)',
+                data: zuzyciePelletu,
+                backgroundColor: 'rgba(33, 150, 243, 0.2)',
+                borderColor: 'rgba(33, 150, 243, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    display: false, // Ukrycie etykiet na osi X
+                    text: 'Okres (Data od-do)'
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Zużycie pelletu (kg/dzień)'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const zuzycie = context.dataset.data[context.dataIndex];
+                            return 'Zużycie: ' + zuzycie + ' kg/dzień';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+
+function analizaMiesieczna() {
+    const monthlyData = {};
+    historia.forEach(item => {
+        const date = new Date(item.data);
+        const monthYear = `${date.getFullYear()}-${date.getMonth() + 1}`; // Format: YYYY-MM
+
+        if (!monthlyData[monthYear]) {
+            monthlyData[monthYear] = { total: 0, count: 0 };
+        }
+        monthlyData[monthYear].total += item.ilosc;
+        monthlyData[monthYear].count += item.koszt;
+    });
+
+    const wyniki = Object.entries(monthlyData).map(([key, value]) => {
+        return `${key}: ${value.total} kg, Wydano: ${(value.count).toFixed(2)} PLN`;
+    }).join('<br>');
+
+    document.getElementById('wynikiAnalizyMiesiecznej').innerHTML = wyniki || 'Brak danych do analizy miesięcznej.';
+}
+
+function analizaRoczna() {
+    const yearlyData = {};
+    historia.forEach(item => {
+        const date = new Date(item.data);
+        const year = date.getFullYear(); // Format: YYYY
+
+        if (!yearlyData[year]) {
+            yearlyData[year] = { total: 0, count: 0 };
+        }
+        yearlyData[year].total += item.ilosc;
+        yearlyData[year].count += item.koszt;
+    });
+
+    const wyniki = Object.entries(yearlyData).map(([key, value]) => {
+        return `${key}: ${value.total} kg, Wydano: ${(value.count).toFixed(2)} PLN`;
+    }).join('<br>');
+
+    document.getElementById('wynikiAnalizyRocznej').innerHTML = wyniki || 'Brak danych do analizy rocznej.';
+}
+
+        // Show the custom value input when "Własna wartość" is selected
+        document.getElementById('iloscDosypania').addEventListener('change', function() {
+            const customValueInput = document.getElementById('customValue');
+            if (this.value === 'custom') {
+                customValueInput.style.display = 'inline';
+            } else {
+                customValueInput.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
